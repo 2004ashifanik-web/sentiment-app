@@ -22,7 +22,7 @@ def home(request: Request):
         context={"text": "", "sentiment": None, "confidence": None}
     )
 
-# UI এর সাথে মিল রাখতে রাউটটি /api/predict করা হয়েছে
+# HTML Form-এর সাথে মেলাতে /api/predict রাউট দেওয়া হয়েছে
 @app.post("/api/predict", response_class=HTMLResponse)
 def predict(request: Request, text: str = Form(...)):
     sentiment = "Unknown"
