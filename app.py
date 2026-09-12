@@ -15,39 +15,42 @@ if os.path.exists(MODEL_PATH):
     model = joblib.load(MODEL_PATH)
 
 @app.get("/", response_class=HTMLResponse)
-def home(request: Request):
+async def home(request: Request):
     return templates.TemplateResponse(
         request=request, 
         name="index.html", 
-        context={"text": "", "sentiment": None, "confidence": None}
+        context={"request": request, "text": "", "sentiment": None, "confidence": None}
     )
 
 @app.post("/api/predict", response_class=HTMLResponse)
 async def predict(request: Request):
-    # Form থেকে পাঠানো সব ডাটা ধরা হচ্ছে
-    form_data = await request.form()
+    form = await request.form()
     
-    # HTML Form-এ নাম 'text', 'text_input' বা অন্য যাই থাক না কেন তা রিড করবে
+    # Form-এর যেকোনো কি (Key) থেকে মান নিয়ে নেওয়ার নিরাপদ পদ্ধতি
     text = ""
-    for key in form_data:
-        if form_data[key]:
-            text = form_data[key]
+    for value in form.values():
+        if isinstance(value, str) and value.strip():
+            text = value.strip()
             break
 
     sentiment = "Unknown"
     confidence = 0.0
 
-    if model and text.strip():
-        prediction = model.predict([text])[0]
-        probabilities = model.predict_proba([text])[0]
-        
-        sentiment = str(prediction)
-        confidence = round(float(max(probabilities)) * 100, 2)
+    if model and text:
+        try:
+            prediction = model.predict([text])[0]
+            probabilities = model.predict_proba([text])[0]
+            
+            sentiment = str(prediction)
+            confidence = round(float(max(probabilities)) * 100, 2)
+        except Exception as e:
+            sentiment = f"Error: {str(e)}"
 
     return templates.TemplateResponse(
         request=request,
         name="index.html",
         context={
+            "request": request,
             "text": text,
             "sentiment": sentiment,
             "confidence": confidence
