@@ -1,6 +1,6 @@
 import os
 import joblib
-from fastapi import FastAPI, Request, Form
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
@@ -24,11 +24,15 @@ def home(request: Request):
 
 @app.post("/api/predict", response_class=HTMLResponse)
 async def predict(request: Request):
-    # Form থেকে পাঠানো সব ডাটা রিসিভ করা হচ্ছে
+    # Form থেকে পাঠানো সব ডাটা ধরা হচ্ছে
     form_data = await request.form()
     
-    # HTML Form-এ নাম 'text' বা 'text_input' যাই থাক, তা ধরে নেওয়া হবে
-    text = form_data.get("text") or form_data.get("text_input") or ""
+    # HTML Form-এ নাম 'text', 'text_input' বা অন্য যাই থাক না কেন তা রিড করবে
+    text = ""
+    for key in form_data:
+        if form_data[key]:
+            text = form_data[key]
+            break
 
     sentiment = "Unknown"
     confidence = 0.0
