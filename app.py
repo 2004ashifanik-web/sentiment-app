@@ -6,10 +6,8 @@ from fastapi.templating import Jinja2Templates
 
 app = FastAPI()
 
-# Jinja2 templates directory setup
 templates = Jinja2Templates(directory="templates")
 
-# Load trained sentiment model
 MODEL_PATH = "sentiment_model.pkl"
 model = None
 
@@ -24,13 +22,13 @@ def home(request: Request):
         context={"text": "", "sentiment": None, "confidence": None}
     )
 
-@app.post("/predict", response_class=HTMLResponse)
+# UI এর সাথে মিল রাখতে রাউটটি /api/predict করা হয়েছে
+@app.post("/api/predict", response_class=HTMLResponse)
 def predict(request: Request, text: str = Form(...)):
     sentiment = "Unknown"
     confidence = 0.0
 
     if model and text.strip():
-        # Model prediction
         prediction = model.predict([text])[0]
         probabilities = model.predict_proba([text])[0]
         
