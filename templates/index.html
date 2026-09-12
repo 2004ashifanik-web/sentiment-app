@@ -3,109 +3,237 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sentiment Analysis App</title>
+    <title>AI Sentiment Intelligence Suite</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        :root {
+            --bg: #f0f2f5;
+            --card-bg: #ffffff;
+            --text: #1c1e21;
+            --primary: #10b981;
+            --border: #e5e7eb;
+        }
+
+        body.dark-mode {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f8fafc;
+            --border: #334155;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
             margin: 0;
             padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            box-sizing: border-box;
+            transition: all 0.3s ease;
         }
+
         .container {
-            background-color: #ffffff;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 480px;
+            max-width: 800px;
+            margin: 0 auto;
         }
-        h2 {
-            text-align: center;
-            color: #333333;
-            margin-top: 0;
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 20px;
         }
+
+        .card {
+            background-color: var(--card-bg);
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+            margin-bottom: 25px;
+        }
+
         textarea {
             width: 100%;
-            height: 130px;
+            height: 120px;
             padding: 12px;
-            border: 1px solid #cccccc;
-            border-radius: 8px;
-            resize: none;
-            font-size: 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: transparent;
+            color: var(--text);
+            font-size: 15px;
             box-sizing: border-box;
-            outline: none;
+            resize: vertical;
         }
-        textarea:focus {
-            border-color: #4CAF50;
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
         }
+
         button {
-            width: 100%;
-            background-color: #4CAF50;
-            color: white;
-            padding: 14px;
+            padding: 10px 18px;
             border: none;
             border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
+            font-weight: 600;
             cursor: pointer;
-            margin-top: 15px;
-            transition: background 0.3s ease;
+            transition: 0.2s;
         }
-        button:hover {
-            background-color: #45a049;
-        }
+
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-secondary { background: #64748b; color: white; }
+        .btn-theme { background: var(--border); color: var(--text); }
+
         .result-box {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 8px;
-            background-color: #eef7ee;
-            border: 1px solid #c3e6cb;
             text-align: center;
+            padding: 20px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 12px;
+            margin-top: 20px;
         }
-        .result-title {
-            font-weight: bold;
-            color: #155724;
-            font-size: 18px;
+
+        .progress-container {
+            width: 100%;
+            background-color: var(--border);
+            border-radius: 20px;
+            height: 12px;
+            margin-top: 10px;
+            overflow: hidden;
         }
-        .confidence {
-            color: #555555;
-            font-size: 14px;
-            margin-top: 6px;
+
+        .progress-bar {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Sentiment Analysis</h2>
-    
-    <form action="/api/predict" method="post">
-        <textarea 
-            name="text" 
-            placeholder="Enter text to analyze sentiment..." 
-            autocorrect="off" 
-            autocapitalize="none" 
-            spellcheck="false" 
-            required>{{ text }}</textarea>
-        
-        <button type="submit">Predict Sentiment</button>
-    </form>
+    <div class="header">
+        <h2>Sentiment Intelligence AI</h2>
+        <button class="btn-theme" onclick="toggleTheme()">Dark / Light Mode</button>
+    </div>
 
-    {% if sentiment %}
-    <div class="result-box">
-        <div class="result-title">Sentiment: {{ sentiment }}</div>
-        {% if confidence %}
-            <div class="confidence">Confidence: {{ confidence }}%</div>
+    <!-- Single Analysis Card -->
+    <div class="card">
+        <h3>Single Text Analysis</h3>
+        <form action="/api/predict" method="post">
+            <textarea id="textInput" name="text" placeholder="Type or speak text..." oninput="updateCount()" required>{{ text }}</textarea>
+            <div style="font-size:12px; color:gray;" id="charCount">Words: 0 | Chars: 0</div>
+            
+            <div class="controls">
+                <button type="submit" class="btn-primary">Analyze Sentiment</button>
+                <button type="button" class="btn-secondary" onclick="startVoice()">Voice Input</button>
+                <button type="button" class="btn-secondary" onclick="speakResult()">Read Out</button>
+            </div>
+        </form>
+
+        {% if sentiment %}
+        <div class="result-box">
+            <h3>Sentiment: {{ sentiment }}</h3>
+            <div>Confidence: {{ confidence }}%</div>
+            <div class="progress-container">
+                <div class="progress-bar" style="width: {{ confidence }}%;"></div>
+            </div>
+        </div>
         {% endif %}
     </div>
-    {% endif %}
+
+    <!-- Bulk Upload Card -->
+    <div class="card">
+        <h3>Bulk CSV/Excel File Analysis</h3>
+        <form action="/api/bulk-predict" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".csv, .xlsx" required style="margin-bottom:10px;">
+            <br>
+            <button type="submit" class="btn-primary">Upload & Analyze</button>
+        </form>
+
+        {% if bulk_results %}
+        <h4>Analytics Summary</h4>
+        <canvas id="bulkChart" style="max-height: 250px;"></canvas>
+
+        <h4>Detailed Output</h4>
+        <div style="max-height: 250px; overflow-y: auto;">
+            <table>
+                <tr><th>Text</th><th>Sentiment</th><th>Score</th></tr>
+                {% for r in bulk_results %}
+                <tr>
+                    <td>{{ r.text }}</td>
+                    <td>{{ r.sentiment }}</td>
+                    <td>{{ r.confidence }}%</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        {% endif %}
+    </div>
 </div>
+
+<script>
+    function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+    }
+
+    function updateCount() {
+        let val = document.getElementById('textInput').value.trim();
+        let words = val ? val.split(/\s+/).length : 0;
+        document.getElementById('charCount').innerText = `Words: ${words} | Chars: ${val.length}`;
+    }
+
+    function startVoice() {
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.start();
+            recognition.onresult = function(event) {
+                document.getElementById('textInput').value = event.results[0][0].transcript;
+                updateCount();
+            };
+        } else {
+            alert("Voice Input not supported in your browser.");
+        }
+    }
+
+    function speakResult() {
+        let text = "{{ sentiment }}";
+        if(text && text !== "None") {
+            let msg = new SpeechSynthesisUtterance("The sentiment is " + text);
+            window.speechSynthesis.speak(msg);
+        }
+    }
+
+    {% if bulk_results %}
+    const ctx = document.getElementById('bulkChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Positive', 'Negative', 'Neutral'],
+            datasets: [{
+                data: [{{ pos_count }}, {{ neg_count }}, {{ neu_count }}],
+                backgroundColor: ['#10b981', '#ef4444', '#f59e0b']
+            }]
+        }
+    });
+    {% endif %}
+
+    updateCount();
+</script>
 
 </body>
 </html>
