@@ -22,9 +22,14 @@ def home(request: Request):
         context={"text": "", "sentiment": None, "confidence": None}
     )
 
-# HTML Form-এর সাথে মেলাতে /api/predict রাউট দেওয়া হয়েছে
 @app.post("/api/predict", response_class=HTMLResponse)
-def predict(request: Request, text: str = Form(...)):
+async def predict(request: Request):
+    # Form থেকে পাঠানো সব ডাটা রিসিভ করা হচ্ছে
+    form_data = await request.form()
+    
+    # HTML Form-এ নাম 'text' বা 'text_input' যাই থাক, তা ধরে নেওয়া হবে
+    text = form_data.get("text") or form_data.get("text_input") or ""
+
     sentiment = "Unknown"
     confidence = 0.0
 
