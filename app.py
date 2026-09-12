@@ -19,19 +19,15 @@ async def home(request: Request):
     return templates.TemplateResponse(
         request=request, 
         name="index.html", 
-        context={"request": request, "text": "", "sentiment": None, "confidence": None}
+        context={"text": "", "sentiment": None, "confidence": None}
     )
 
 @app.post("/api/predict", response_class=HTMLResponse)
 async def predict(request: Request):
-    form = await request.form()
+    form_data = await request.form()
     
-    # Form-এর যেকোনো কি (Key) থেকে মান নিয়ে নেওয়ার নিরাপদ পদ্ধতি
-    text = ""
-    for value in form.values():
-        if isinstance(value, str) and value.strip():
-            text = value.strip()
-            break
+    # Form data থেকে ডাটা নেওয়া হচ্ছে
+    text = form_data.get("text", "").strip()
 
     sentiment = "Unknown"
     confidence = 0.0
@@ -50,7 +46,6 @@ async def predict(request: Request):
         request=request,
         name="index.html",
         context={
-            "request": request,
             "text": text,
             "sentiment": sentiment,
             "confidence": confidence
